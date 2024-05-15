@@ -25,8 +25,6 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     Ui::MainWindow *ui;
@@ -43,14 +41,17 @@ private:
     void movePacman(Direction direction);
     void colocarImagen(const QPixmap &imagen, int fila, int columna);
     QList<QPixmap> recortarSpritesheet(const QPixmap &spritesheet, int newWidth, int newHeight);
-QList<QPixmap> sprites; // Variable para almacenar los sprites recortados
+    QList<QPixmap> sprites; // Variable para almacenar los sprites recortados
 private slots:
-    void moveFantasma(Fantasma *fantasma);
+
+    void on_start_clicked();
+
 private:
     QList<QGraphicsPixmapItem*> spritesItems;
 };
 
 #endif // MAINWINDOW_H
+
 
 
 

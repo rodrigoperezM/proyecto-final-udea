@@ -69,3 +69,4 @@ Direction Fantasma::randomDirection() const
     int random = QRandomGenerator::global()->bounded(0, 4); // 0 a 3 (arriba, abajo, izquierda, derecha)
     return static_cast<Direction>(random);
 }
+

@@ -14,12 +14,8 @@ class Pacman : public QObject, public QGraphicsPixmapItem
 
 public:
     Pacman(int width, int height, int cellSize, QObject *parent = nullptr);
-    void move(Direction direction);
+    //void move(Direction direction);
     bool checkCollision(const QPointF &newPos) const;
-
-protected:
-    // Aquí declaramos el método keyPressEvent
-    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     int spriteWidth;
@@ -27,6 +23,9 @@ private:
     int cellSize;
     Direction currentDirection;
     QPointF pacmanPos;
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 };
 
 #endif // PACMAN_H

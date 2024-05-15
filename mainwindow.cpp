@@ -1,4 +1,5 @@
 
+#include <QMainWindow>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QGraphicsRectItem>
@@ -26,17 +27,17 @@ MainWindow::MainWindow(QWidget *parent) :
     laberinto = {
         "##################",
         "#.......#........#",
-        "#..###...#..##.###",
+        "#...##...#..##..##",
         "#........#.......#",
         "#...##...#####.###",
         "#..........#...#.#",
         "#########...#....#",
-        "#............#..##",
+        "#............#...#",
         "#..##....###.....#",
         "##...##....#.#..##",
-        "######..####.##.##",
+        "#####...####.##.##",
         "#............#...#",
-        "#.##.##..###..####",
+        "#..#.##..###..####",
         "##################",
     };
     // Dibujar el laberinto en la escena
@@ -50,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Colocar las imágenes en el laberinto
     colocarImagen(sprites[0], 10, 5); // fruta
     colocarImagen(sprites[1], 2, 3); // fruta
-    colocarImagen(sprites[2], 5, 11); // fruta
+    colocarImagen(sprites[2], 5, 10); // fruta
     colocarImagen(sprites[3], 11, 16); //fruta
     colocarImagen(sprites[4], 1, 13); //llave
 
@@ -59,11 +60,11 @@ MainWindow::MainWindow(QWidget *parent) :
     colocarImagen(sprites[6], 7, 7); // Fantasma 6
     colocarImagen(sprites[7], 1, 5); //pacman
     colocarImagen(sprites[8], 4, 1); // fantasma
-    colocarImagen(sprites[9], 4, 15); // fantasma
+    colocarImagen(sprites[9], 3, 15); // fantasma
     colocarImagen(sprites[10], 7, 16); // fantasma
 
-    Fantasma *fantasma1 = new Fantasma(spriteWidth, spriteHeight, cellSize, scene);
-    Fantasma *fantasma2 = new Fantasma(spriteWidth, spriteHeight, cellSize, scene);
+    Fantasma *fantasma1 = new Fantasma(spriteWidth, spriteHeight, cellSize, scene, this);
+    Fantasma *fantasma2 = new Fantasma(spriteWidth, spriteHeight, cellSize, scene, this);
     scene->addItem(fantasma1);
     scene->addItem(fantasma2);
 
@@ -72,37 +73,16 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(fantasma2->getTimer(), &QTimer::timeout, fantasma2, &Fantasma::move);
 }
 
+
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
-    switch (event->key()) {
-    case Qt::Key_Left:
-        movePacman(Direction::Left);
-        break;
-    case Qt::Key_Right:
-        movePacman(Direction::Right);
-        break;
-    case Qt::Key_Up:
-        movePacman(Direction::Up);
-        break;
-    case Qt::Key_Down:
-        movePacman(Direction::Down);
-        break;
-    default:
-        QMainWindow::keyPressEvent(event);
-    }
-    scene->update(); // Actualizar la escena después del movimiento del jugador
-}
-
 void MainWindow::movePacman(Direction direction)
 {
     // Buscar la posición actual de Pacman
-    int row = 0, col = 0;
-    for (row = 0; row < laberinto.size(); ++row) {
+    int row = 1, col = 5;
+    for (row = 1; row < laberinto.size(); ++row) {
         col = QString::fromStdString(laberinto[row]).indexOf('P');
         if (col != -1) break;
     }
@@ -142,39 +122,7 @@ void MainWindow::movePacman(Direction direction)
     pacman->setPos(newX, newY);
 }
 
-void MainWindow::moveFantasma(Fantasma *fantasma)
-{
-    // Implementar la lógica para mover al fantasma
-    // Por ahora, moveremos aleatoriamente
-    int randomDirection = qrand() % 4; // 0: arriba, 1: derecha, 2: abajo, 3: izquierda
 
-    int dx = 0, dy = 0;
-    switch (randomDirection) {
-    case 0: // Arriba
-        dy = -1;
-        break;
-    case 1: // Derecha
-        dx = 1;
-        break;
-    case 2: // Abajo
-        dy = 1;
-        break;
-    case 3: // Izquierda
-        dx = -1;
-        break;
-    }
-
-    // Obtener la posición actual del fantasma
-    int x = fantasma->x() / cellSize;
-    int y = fantasma->y() / cellSize;
-
-    // Verificar si la próxima posición está dentro del laberinto y no es una pared
-    if (x + dx >= 0 && x + dx < laberinto[0].size() && y + dy >= 0 && y + dy < laberinto.size() &&
-            laberinto[y + dy][x + dx] != '#') {
-        // Mover el fantasma
-        fantasma->setPos((x + dx) * cellSize, (y + dy) * cellSize);
-    }
-}
 
 void MainWindow::drawLaberinto()
 {
@@ -203,8 +151,6 @@ void MainWindow::colocarImagen(const QPixmap &imagen, int fila, int columna)
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(imagen);
     item->setPos(columna * cellSize, fila * cellSize);
     scene->addItem(item);
-    // Guardar una referencia al item en la lista
-       spritesItems.append(item);
 }
 
 QList<QPixmap> MainWindow::recortarSpritesheet(const QPixmap &spritesheet, int newWidth, int newHeight)
@@ -223,6 +169,11 @@ QList<QPixmap> MainWindow::recortarSpritesheet(const QPixmap &spritesheet, int n
         }
     }
     return sprites;
+}
+
+void MainWindow::on_start_clicked()
+{
+
 }
 
 
