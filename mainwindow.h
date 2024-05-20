@@ -1,58 +1,59 @@
 
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
 #include <QGraphicsScene>
 #include <QGraphicsView>
-#include <QPixmap>
-#include <QGraphicsPixmapItem>
 #include <QKeyEvent>
-#include <QList>
-#include <QTimer>
-#include "direction.h"
-#include "fantasma.h"
+#include <QGraphicsPixmapItem>
+#include <vector>
+#include <QLabel>
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+namespace Ui {
+class MainWindow;
+}
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     Ui::MainWindow *ui;
     QGraphicsScene *scene;
     QGraphicsView *view;
-    QPixmap spritesheet;
+    QGraphicsPixmapItem *pacmanItem;
+    int pacmanX;
+    int pacmanY;
     int spriteWidth;
     int spriteHeight;
     int cellSize;
-    std::vector<std::string> laberinto;
-    QTimer *fantasmaTimer;
+    std::vector<QString> laberinto;
+    int score;
+    int lives;
+    int enemiesRemaining;
+    QLabel *scoreLabel;
+    QLabel *livesLabel;
+    QLabel *enemiesLabel;
 
     void drawLaberinto();
-    void movePacman(Direction direction);
-    void colocarImagen(const QPixmap &imagen, int fila, int columna);
-    QList<QPixmap> recortarSpritesheet(const QPixmap &spritesheet, int newWidth, int newHeight);
-    QList<QPixmap> sprites; // Variable para almacenar los sprites recortados
-private slots:
-
-    void on_start_clicked();
-
-private:
-    QList<QGraphicsPixmapItem*> spritesItems;
+    void movePacman(int dx, int dy);
+    void collectPoint(int x, int y);
+    void checkCollision();
+    void updateScore();
+    void updateLives();
+    void updateEnemiesRemaining();
+    void checkGameOver();
 };
 
 #endif // MAINWINDOW_H
-
-
 
 
 

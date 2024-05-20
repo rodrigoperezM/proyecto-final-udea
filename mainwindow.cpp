@@ -1,29 +1,27 @@
 
-#include <QMainWindow>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QGraphicsRectItem>
-#include <QPixmap>
-#include <QDebug>
-#include <QKeyEvent>
-#include <QTimer>
 #include "fantasma.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    pacmanX(1),
+    pacmanY(1),
     spriteWidth(32),
     spriteHeight(32),
-    cellSize(40)
+    cellSize(40),
+    score(0),
+    lives(3),  // Iniciar con 3 vidas
+    enemiesRemaining(2)  // Número de enemigos iniciales
 {
     ui->setupUi(this);
 
-    // Inicializar la escena y la vista
     scene = new QGraphicsScene(this);
     view = new QGraphicsView(scene, this);
     setCentralWidget(view);
 
-    // Inicializar el laberinto como un laberinto simple de 20x30
+    // Inicializar el laberinto
     laberinto = {
         "##################",
         "#.......#........#",
@@ -43,86 +41,41 @@ MainWindow::MainWindow(QWidget *parent) :
     // Dibujar el laberinto en la escena
     drawLaberinto();
 
-    // Cargar y recortar el spritesheet
-    QPixmap spritesheet(":/spritesheet.png");
-    //QList<QPixmap> sprites = recortarSpritesheet(spritesheet, spriteWidth, spriteHeight);
-    sprites = recortarSpritesheet(spritesheet, spriteWidth, spriteHeight);
+    // Crear etiquetas para la puntuación, vidas y enemigos restantes
+    scoreLabel = new QLabel("Score: 0", this);
+    scoreLabel->setGeometry(10, 10, 100, 30);
+    livesLabel = new QLabel("Lives: 3", this);
+    livesLabel->setGeometry(120, 10, 100, 30);
+    enemiesLabel = new QLabel("Enemies: 2", this);
+    enemiesLabel->setGeometry(230, 10, 100, 30);
 
-    // Colocar las imágenes en el laberinto
-    colocarImagen(sprites[0], 10, 5); // fruta
-    colocarImagen(sprites[1], 2, 3); // fruta
-    colocarImagen(sprites[2], 5, 10); // fruta
-    colocarImagen(sprites[3], 11, 16); //fruta
-    colocarImagen(sprites[4], 1, 13); //llave
+    // Colocar Pac-Man en el laberinto
+    QPixmap pacmanImage(":/pacman.png");
+    pacmanItem = new QGraphicsPixmapItem(pacmanImage);
+    pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
+    scene->addItem(pacmanItem);
 
-    // Crear y agregar los fantasmas a la escena
-    colocarImagen(sprites[5], 12, 2); // Fantasma 5
-    colocarImagen(sprites[6], 7, 7); // Fantasma 6
-    colocarImagen(sprites[7], 1, 5); //pacman
-    colocarImagen(sprites[8], 4, 1); // fantasma
-    colocarImagen(sprites[9], 3, 15); // fantasma
-    colocarImagen(sprites[10], 7, 16); // fantasma
+    // Cargar imágenes de los fantasmas
+    QPixmap ghostImage1(":/ghost1.png");
+    QPixmap ghostImage2(":/ghost2.png");
 
-    Fantasma *fantasma1 = new Fantasma(spriteWidth, spriteHeight, cellSize, scene, this);
-    Fantasma *fantasma2 = new Fantasma(spriteWidth, spriteHeight, cellSize, scene, this);
+    // Crear y agregar los fantasmas a la escena con sus imágenes
+    Fantasma *fantasma1 = new Fantasma(cellSize, laberinto, scene, ghostImage1);
+    Fantasma *fantasma2 = new Fantasma(cellSize, laberinto, scene, ghostImage2);
+    fantasma1->setPos(5 * cellSize, 10 * cellSize);
+    fantasma2->setPos(10 * cellSize, 5 * cellSize);
     scene->addItem(fantasma1);
     scene->addItem(fantasma2);
 
-    // Conectar el temporizador de cada fantasma a su función move()
-    connect(fantasma1->getTimer(), &QTimer::timeout, fantasma1, &Fantasma::move);
-    connect(fantasma2->getTimer(), &QTimer::timeout, fantasma2, &Fantasma::move);
+    // Iniciar los temporizadores de los fantasmas
+    fantasma1->getTimer()->start();
+    fantasma2->getTimer()->start();
 }
-
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-void MainWindow::movePacman(Direction direction)
-{
-    // Buscar la posición actual de Pacman
-    int row = 1, col = 5;
-    for (row = 1; row < laberinto.size(); ++row) {
-        col = QString::fromStdString(laberinto[row]).indexOf('P');
-        if (col != -1) break;
-    }
-
-    // Calcular la nueva posición según la dirección
-    switch (direction) {
-    case Direction::Left:
-        if (col > 0 && laberinto[row][col - 1] != '#') {
-            laberinto[row][col] = ' '; // Limpiar la posición actual
-            laberinto[row][col - 1] = 'P'; // Actualizar la nueva posición
-        }
-        break;
-    case Direction::Right:
-        if (col < laberinto[row].size() - 1 && laberinto[row][col + 1] != '#') {
-            laberinto[row][col] = ' '; // Limpiar la posición actual
-            laberinto[row][col + 1] = 'P'; // Actualizar la nueva posición
-        }
-        break;
-    case Direction::Up:
-        if (row > 0 && laberinto[row - 1][col] != '#') {
-            laberinto[row][col] = ' '; // Limpiar la posición actual
-            laberinto[row - 1][col] = 'P'; // Actualizar la nueva posición
-        }
-        break;
-    case Direction::Down:
-        if (row < laberinto.size() - 1 && laberinto[row + 1][col] != '#') {
-            laberinto[row][col] = ' '; // Limpiar la posición actual
-            laberinto[row + 1][col] = 'P'; // Actualizar la nueva posición
-        }
-        break;
-    }
-
-    // Actualizar la posición de Pacman en la escena
-    QGraphicsItem *pacman = scene->items().at(7);
-    int newX = pacman->x() + (direction == Direction::Right) - (direction == Direction::Left);
-    int newY = pacman->y() + (direction == Direction::Down) - (direction == Direction::Up);
-    pacman->setPos(newX, newY);
-}
-
-
 
 void MainWindow::drawLaberinto()
 {
@@ -146,34 +99,91 @@ void MainWindow::drawLaberinto()
     }
 }
 
-void MainWindow::colocarImagen(const QPixmap &imagen, int fila, int columna)
+void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    QGraphicsPixmapItem *item = new QGraphicsPixmapItem(imagen);
-    item->setPos(columna * cellSize, fila * cellSize);
-    scene->addItem(item);
+    switch (event->key()) {
+        case Qt::Key_W:
+            movePacman(0, -1);
+            break;
+        case Qt::Key_A:
+            movePacman(-1, 0);
+            break;
+        case Qt::Key_S:
+            movePacman(0, 1);
+            break;
+        case Qt::Key_D:
+            movePacman(1, 0);
+            break;
+        default:
+            QMainWindow::keyPressEvent(event);
+    }
 }
 
-QList<QPixmap> MainWindow::recortarSpritesheet(const QPixmap &spritesheet, int newWidth, int newHeight)
+void MainWindow::movePacman(int dx, int dy)
 {
-    QList<QPixmap> sprites;
-    int numRows = 3;
-    int numCols = 4;
-    int spriteWidth = spritesheet.width() / numCols;
-    int spriteHeight = spritesheet.height() / numRows;
+    int newPacmanX = pacmanX + dx;
+    int newPacmanY = pacmanY + dy;
 
-    for (int row = 0; row < numRows; ++row) {
-        for (int col = 0; col < numCols; ++col) {
-            QPixmap sprite = spritesheet.copy(col * spriteWidth, row * spriteHeight, spriteWidth, spriteHeight)
-                             .scaled(newWidth, newHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            sprites.append(sprite);
+    // Verificar colisiones con las paredes
+    if (laberinto[newPacmanY][newPacmanX] != '#') {
+        pacmanX = newPacmanX;
+        pacmanY = newPacmanY;
+        pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
+        collectPoint(newPacmanX, newPacmanY);
+        checkCollision();
+    }
+}
+
+void MainWindow::collectPoint(int x, int y)
+{
+    if (laberinto[y][x] == '.') {
+        laberinto[y][x] = ' '; // Eliminar el punto del laberinto
+        updateScore();
+        drawLaberinto(); // Redibujar el laberinto para reflejar el cambio
+    }
+}
+
+void MainWindow::checkCollision()
+{
+    // Verificar colisión con los fantasmas
+    QList<QGraphicsItem *> items = scene->collidingItems(pacmanItem);
+    for (QGraphicsItem *item : items) {
+        Fantasma *fantasma = dynamic_cast<Fantasma *>(item);
+        if (fantasma) {
+            lives--;  // Reducir una vida
+            updateLives();
+            if (lives <= 0) {
+                checkGameOver();
+            }
         }
     }
-    return sprites;
 }
 
-void MainWindow::on_start_clicked()
+void MainWindow::updateScore()
 {
-
+    score += 10; // Incrementar la puntuación
+    scoreLabel->setText("Score: " + QString::number(score));
 }
+
+void MainWindow::updateLives()
+{
+    livesLabel->setText("Lives: " + QString::number(lives));
+}
+
+void MainWindow::updateEnemiesRemaining()
+{
+    enemiesLabel->setText("Enemies: " + QString::number(enemiesRemaining));
+}
+
+void MainWindow::checkGameOver()
+{
+    // Verificar si el juego ha terminado
+    if (lives <= 0) {
+        // Mostrar pantalla de fin de juego
+        // Implementar pantalla de fin de juego
+    }
+}
+
+
 
 
