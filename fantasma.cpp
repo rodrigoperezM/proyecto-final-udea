@@ -1,5 +1,7 @@
 
 #include "fantasma.h"
+#include <cstdlib>
+#include <ctime>
 
 Fantasma::Fantasma(int cellSize, const std::vector<QString>& laberinto, QGraphicsScene *scene, const QPixmap &sprite)
     : cellSize(cellSize), laberinto(laberinto), scene(scene) {
@@ -39,5 +41,3 @@ bool Fantasma::canMoveTo(int newX, int newY) {
     }
     return false;
 }
-
-

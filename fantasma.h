@@ -30,7 +30,3 @@ private:
 };
 
 #endif // FANTASMA_H
-
-
-
-
