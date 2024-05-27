@@ -17,20 +17,20 @@
    <widget class="QGraphicsView" name="graphicsView">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>40</x>
       <y>-10</y>
       <width>1200</width>
       <height>800</height>
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="startButton">
+   <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>400</y>
-      <width>150</width>
-      <height>150</height>
+      <x>260</x>
+      <y>460</y>
+      <width>75</width>
+      <height>23</height>
      </rect>
     </property>
     <property name="text">

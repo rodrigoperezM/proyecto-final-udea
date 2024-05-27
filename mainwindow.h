@@ -1,45 +1,3 @@
-/*
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
-
-#include <QMainWindow>
-#include <QGraphicsScene>
-#include <QGraphicsView>
-#include <QKeyEvent>
-#include <QGraphicsPixmapItem>
-#include <vector>
-
-namespace Ui {
-class MainWindow;
-}
-
-class MainWindow : public QMainWindow {
-    Q_OBJECT
-
-public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
-
-private:
-    Ui::MainWindow *ui;
-    QGraphicsScene *scene;
-    QGraphicsView *view;
-    QGraphicsPixmapItem *pacmanItem;
-    int pacmanX;
-    int pacmanY;
-    int spriteWidth;
-    int spriteHeight;
-    int cellSize;
-    std::vector<QString> laberinto;
-
-    void drawLaberinto();
-    void movePacman(int dx, int dy);
-};
-
-#endif // MAINWINDOW_H*/
 
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
@@ -67,9 +25,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
-    void on_startButton_clicked();
-
-
+void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;

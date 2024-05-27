@@ -1,5 +1,5 @@
 
-#ifndef PACMAN_H
+/*#ifndef PACMAN_H
 #define PACMAN_H
 
 #include <QObject>
@@ -28,7 +28,7 @@ protected:
 
 };
 
-#endif // PACMAN_H
+#endif // PACMAN_H*/
 
 
 
