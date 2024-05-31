@@ -1,32 +1,41 @@
-
 #ifndef FANTASMA_H
 #define FANTASMA_H
 
 #include <QGraphicsPixmapItem>
-#include <QTimer>
-#include <QObject>
 #include <QGraphicsScene>
-#include <vector>
-#include <QString>
+#include <QObject>
+#include <QTimer>
+
+enum class GhostType { Blinky, Clyde };
 
 class Fantasma : public QObject, public QGraphicsPixmapItem {
     Q_OBJECT
+
 public:
-    Fantasma(int cellSize, const std::vector<QString>& laberinto, QGraphicsScene *scene, const QPixmap &sprite);
+    Fantasma(int cellSize, const std::vector<QString> &laberinto, QGraphicsScene *scene, const QPixmap &pixmap, GhostType type);
 
-    QTimer* getTimer() const { return timer; }
+    void setPacmanPosition(int x, int y);
+    void setScore(int score);
+    void setPowerMode(bool powerMode); // Nueva función para establecer el modo de poder
 
-public slots:
+signals:
+    void pacmanCaught();
+
+private slots:
     void move();
 
 private:
     int cellSize;
-    const std::vector<QString>& laberinto;
-    QGraphicsScene *scene;
-    QTimer *timer;
+    std::vector<QString> laberinto;
+    int pacmanX;
+    int pacmanY;
+    int score;
+    GhostType type;
+    QTimer *moveTimer;
+    bool powerMode; // Estado para el modo de poder
 
-    void moveRandomly();
-    bool canMoveTo(int newX, int newY);
+    void changeDirection();
 };
 
 #endif // FANTASMA_H
+

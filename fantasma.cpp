@@ -1,43 +1,68 @@
-
 #include "fantasma.h"
 #include <cstdlib>
-#include <ctime>
 
-Fantasma::Fantasma(int cellSize, const std::vector<QString>& laberinto, QGraphicsScene *scene, const QPixmap &sprite)
-    : cellSize(cellSize), laberinto(laberinto), scene(scene) {
-    setPixmap(sprite.scaled(cellSize, cellSize));
-    timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &Fantasma::move);
-    timer->start(1000); // Move every second
-    srand(time(nullptr)); // Inicializar la semilla del generador de números aleatorios
+Fantasma::Fantasma(int cellSize, const std::vector<QString> &laberinto, QGraphicsScene *scene, const QPixmap &pixmap, GhostType type)
+    : QGraphicsPixmapItem(pixmap), cellSize(cellSize), laberinto(laberinto), pacmanX(0), pacmanY(0), score(0), type(type), powerMode(false) {
+    moveTimer = new QTimer(this);
+    connect(moveTimer, &QTimer::timeout, this, &Fantasma::move);
+    moveTimer->start(300);
+}
+
+void Fantasma::setPacmanPosition(int x, int y) {
+    pacmanX = x;
+    pacmanY = y;
+}
+
+void Fantasma::setScore(int score) {
+    this->score = score;
+}
+
+void Fantasma::setPowerMode(bool powerMode) {
+    this->powerMode = powerMode;
 }
 
 void Fantasma::move() {
-    moveRandomly();
-}
+    int ghostX = x() / cellSize;
+    int ghostY = y() / cellSize;
 
-void Fantasma::moveRandomly() {
-    // Obtener una dirección de movimiento aleatoria
-    int dx = rand() % 3 - 1; // -1, 0 o 1
-    int dy = rand() % 3 - 1; // -1, 0 o 1
+    if (powerMode) {
+        // Mueve fantasma en dirección opuesta a Pacman
+        if (ghostX < pacmanX / cellSize) {
+            ghostX--;
+        } else if (ghostX > pacmanX / cellSize) {
+            ghostX++;
+        }
 
-    // Calcular la nueva posición
-    int newX = x() + dx * cellSize;
-    int newY = y() + dy * cellSize;
+        if (ghostY < pacmanY / cellSize) {
+            ghostY--;
+        } else if (ghostY > pacmanY / cellSize) {
+            ghostY++;
+        }
+    } else {
+        // Mueve fantasma hacia Pacman
+        if (ghostX < pacmanX / cellSize) {
+            ghostX++;
+        } else if (ghostX > pacmanX / cellSize) {
+            ghostX--;
+        }
 
-    // Verificar si el movimiento es válido (no chocar con las paredes)
-    if (canMoveTo(newX, newY)) {
-        setPos(newX, newY);
+        if (ghostY < pacmanY / cellSize) {
+            ghostY++;
+        } else if (ghostY > pacmanY / cellSize) {
+            ghostY--;
+        }
+    }
+
+    if (laberinto[ghostY][ghostX] != '#') {
+        setPos(ghostX * cellSize, ghostY * cellSize);
+    }
+
+    if (ghostX == pacmanX / cellSize && ghostY == pacmanY / cellSize) {
+        emit pacmanCaught();
     }
 }
 
-bool Fantasma::canMoveTo(int newX, int newY) {
-    int col = newX / cellSize;
-    int row = newY / cellSize;
-
-    // Verificar límites del laberinto y paredes
-    if (row >= 0 && row < laberinto.size() && col >= 0 && col < laberinto[0].size() && laberinto[row][col] != '#') {
-        return true;
-    }
-    return false;
+void Fantasma::changeDirection() {
+    // Cambia dirección aleatoriamente
 }
+
