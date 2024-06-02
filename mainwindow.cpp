@@ -1,8 +1,13 @@
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "fantasma.h"
 #include <QMessageBox>
+#include <QTimer>
+#include <QMessageBox>
+#include <QKeyEvent>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsEllipseItem>
+#include <QMediaPlayer>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -16,12 +21,10 @@ MainWindow::MainWindow(QWidget *parent) :
     lives(3),
     enemiesRemaining(2),
     gameOver(false),
-    powerMode(false)
+    powerMode(false),
+    pacmanMouthOpen(true) // Indicar que inicialmente la boca de Pac-Man está abierta
 {
     ui->setupUi(this);
-   /* scene = new QGraphicsScene(this);
-    view = new QGraphicsView(scene, this);
-    setCentralWidget(view);*/
 
     scene = new QGraphicsScene(this);
     ui->graphicsView->setScene(scene);
@@ -45,13 +48,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     drawLaberinto();
 
-    /*scoreLabel = new QLabel("Score: 0", this);
-    scoreLabel->setGeometry(10, 10, 100, 30);
-    livesLabel = new QLabel("Vidas: 3", this);
-    livesLabel->setGeometry(120, 10, 100, 30);
-    enemiesLabel = new QLabel("Enemigos: 2", this);
-    enemiesLabel->setGeometry(230, 10, 100, 30);*/
-
     scoreLabel = new QLabel("Score: 0", this);
     scoreLabel->setGeometry(900, 10, 100, 30); // (x, y, ancho, alto)
     livesLabel = new QLabel("Lives: 3", this);
@@ -59,12 +55,33 @@ MainWindow::MainWindow(QWidget *parent) :
     enemiesLabel = new QLabel("Enemies: 2", this);
     enemiesLabel->setGeometry(900, 90, 100, 30); // Ajustado para estar debajo de livesLabel
 
+    // Cargar las imágenes de Pac-Man con la boca abierta y cerrada
+    pacmanImageOpen.load(":/pacman2.png");
+    pacmanImageClosed.load(":/pacman1.png");
 
-    QPixmap pacmanImage(":/pacman.png");
-    pacmanItem = new QGraphicsPixmapItem(pacmanImage);
+    // Cargar las imágenes de Pac-Man en diferentes direcciones
+    pacmanImageUp.load(":/arriba.png");
+    pacmanImageDown.load(":/abajo.png");
+    pacmanImageLeft.load(":/izquierda.png");
+    pacmanImageRight.load(":/pacman2.png");
+
+    // Inicializar la variable de estado de la boca de Pac-Man
+    pacmanMouthOpen = true;
+
+    // Establecer la imagen de Pac-Man en la escena y guardar su referencia
+    pacmanItem = new QGraphicsPixmapItem(pacmanImageOpen);
     pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
     scene->addItem(pacmanItem);
 
+    // Configurar el sonido de Pac-Man
+    chompSound = new QMediaPlayer(this);
+    chompSound->setMedia(QUrl("qrc:/pacmansonido.mp3"));
+    chompSound->setVolume(50);
+
+    // Reproducir el sonido al inicio del juego
+    chompSound->play();
+
+    // Crear y posicionar los fantasmas
     QPixmap ghostImage1(":/ghost1.png");
     QPixmap ghostImage2(":/ghost2.png");
     Fantasma *blinky = new Fantasma(cellSize, laberinto, scene, ghostImage1, GhostType::Blinky);
@@ -74,6 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
     scene->addItem(blinky);
     scene->addItem(clyde);
 
+    // Conectar las señales de pacmanCaught de los fantasmas al método handlePacmanCaught
     connect(blinky, &Fantasma::pacmanCaught, this, &MainWindow::handlePacmanCaught);
     connect(clyde, &Fantasma::pacmanCaught, this, &MainWindow::handlePacmanCaught);
 
@@ -103,23 +121,11 @@ void MainWindow::drawLaberinto() {
                 int x = col * cellSize + cellSize / 2 - 5;
                 int y = row * cellSize + cellSize / 2 - 5;
                 QGraphicsEllipseItem *powerPoint = scene->addEllipse(x, y, 10, 10, QPen(Qt::black), QBrush(Qt::yellow));
-                powerPoint->setData(0, "Punto de poder");
+                powerPoint->setData(0, "Puntos de poder");
             }
         }
     }
 }
-
-/*void MainWindow::keyPressEvent(QKeyEvent *event) {
-    if (gameOver) return;
-
-    switch (event->key()) {
-    case Qt::Key_W: movePacman(0, -1); break;
-    case Qt::Key_S: movePacman(0, 1); break;
-    case Qt::Key_A: movePacman(-1, 0); break;
-    case Qt::Key_D: movePacman(1, 0); break;
-    default: QMainWindow::keyPressEvent(event); break;
-    }
-}*/
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
@@ -146,16 +152,123 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
+/*void MainWindow::movePacman(int dx, int dy) {
+    int newPacmanX = pacmanX + dx;
+    int newPacmanY = pacmanY + dy;
+    if (newPacmanX >= 0 && newPacmanX < static_cast<int>(laberinto[0].size()) && newPacmanY >= 0 && newPacmanY < static_cast<int
+
+>(laberinto.size()) && laberinto[newPacmanY][newPacmanX] != '#') {
+        pacmanX = newPacmanX;
+        pacmanY = newPacmanY;
+
+        // Cambiar la imagen de Pac-Man dependiendo de la dirección
+        if (dx > 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageRight : pacmanImageClosed);
+        } else if (dx < 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageLeft : pacmanImageClosed);
+        } else if (dy > 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageDown : pacmanImageClosed);
+        } else if (dy < 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageUp : pacmanImageClosed);
+        }
+
+        // Alternar el estado de la boca de Pac-Man
+        pacmanMouthOpen = !pacmanMouthOpen;
+
+        // Actualizar la posición de Pac-Man en la escena
+        pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
+
+        // Verificar la recolección de puntos y colisiones
+        collectPoint(newPacmanX, newPacmanY);
+        checkCollision();
+
+        // Actualizar la posición y puntuación de los fantasmas
+        QList<QGraphicsItem *> items = scene->items();
+        foreach (QGraphicsItem *item, items) {
+            Fantasma *ghost = dynamic_cast<Fantasma *>(item);
+            if (ghost) {
+                ghost->setPacmanPosition(pacmanX * cellSize, pacmanY * cellSize);
+                ghost->setScore(score);
+            }
+        }
+    }
+}*/
+
+/*void MainWindow::movePacman(int dx, int dy) {
+    int newPacmanX = pacmanX + dx;
+    int newPacmanY = pacmanY + dy;
+    if (newPacmanX >= 0 && newPacmanX < static_cast<int>(laberinto[0].size()) && newPacmanY >= 0 && newPacmanY < static_cast<int>(laberinto.size()) && laberinto[newPacmanY][newPacmanX] != '#') {
+        pacmanX = newPacmanX;
+        pacmanY = newPacmanY;
+
+        // Cambiar la imagen de Pac-Man dependiendo de la dirección
+        if (dx > 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageRight : pacmanImageClosed);
+        } else if (dx < 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageLeft : pacmanImageClosed);
+        } else if (dy > 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageDown : pacmanImageClosed);
+        } else if (dy < 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageUp : pacmanImageClosed);
+        }
+
+        // Alternar el estado de la boca de Pac-Man
+        pacmanMouthOpen = !pacmanMouthOpen;
+
+        // Reproducir el sonido de masticar si se recolecta un punto
+        collectPoint(newPacmanX, newPacmanY);
+
+        // Actualizar la posición de Pac-Man en la escena
+        pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
+
+        // Verificar colisiones con los fantasmas
+        checkCollision();
+
+        // Actualizar la posición y puntuación de los fantasmas
+        QList<QGraphicsItem *> items = scene->items();
+        foreach (QGraphicsItem *item, items) {
+            Fantasma *ghost = dynamic_cast<Fantasma *>(item);
+            if (ghost) {
+                ghost->setPacmanPosition(pacmanX * cellSize, pacmanY * cellSize);
+                ghost->setScore(score);
+            }
+        }
+    }
+}*/
+
 void MainWindow::movePacman(int dx, int dy) {
     int newPacmanX = pacmanX + dx;
     int newPacmanY = pacmanY + dy;
-    if (newPacmanX >= 0 && newPacmanX < laberinto[0].size() && newPacmanY >= 0 && newPacmanY < laberinto.size() && laberinto[newPacmanY][newPacmanX] != '#') {
+    if (newPacmanX >= 0 && newPacmanX < static_cast<int>(laberinto[0].size()) && newPacmanY >= 0 && newPacmanY < static_cast<int>(laberinto.size()) && laberinto[newPacmanY][newPacmanX] != '#') {
         pacmanX = newPacmanX;
         pacmanY = newPacmanY;
+
+        // Cambiar la imagen de Pac-Man dependiendo de la dirección
+        if (dx > 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageRight : pacmanImageClosed);
+        } else if (dx < 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageLeft : pacmanImageClosed);
+        } else if (dy > 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageDown : pacmanImageClosed);
+        } else if (dy < 0) {
+            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageUp : pacmanImageClosed);
+        }
+
+        // Alternar el estado de la boca de Pac-Man
+        pacmanMouthOpen = !pacmanMouthOpen;
+
+        // Reproducir el sonido de masticar
+        chompSound->play();
+
+        // Actualizar la posición de Pac-Man en la escena
         pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
-        collectPoint(newPacmanX, newPacmanY);
+
+        // Verificar colisiones con los fantasmas
         checkCollision();
-        foreach (QGraphicsItem *item, scene->items()) {
+
+        // Actualizar la posición y puntuación de los fantasmas
+        QList<QGraphicsItem *> items = scene->items();
+        foreach (QGraphicsItem *item, items) {
             Fantasma *ghost = dynamic_cast<Fantasma *>(item);
             if (ghost) {
                 ghost->setPacmanPosition(pacmanX * cellSize, pacmanY * cellSize);
@@ -164,6 +277,8 @@ void MainWindow::movePacman(int dx, int dy) {
         }
     }
 }
+
+
 
 void MainWindow::collectPoint(int x, int y) {
     if (laberinto[y][x] == '.') {
@@ -278,48 +393,6 @@ void MainWindow::resetPacmanPosition() {
     pacmanY = 1;
     pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
 }
-/*
-void MainWindow::resetGame() {
-    pacmanX = 1;
-    pacmanY = 1;
-    score = 0;
-    lives = 3;
-    enemiesRemaining = 2;
-    gameOver = false;
-    powerMode = false;
-    drawLaberinto();
-    updateScore();
-    updateLives();
-    updateEnemiesRemaining();
-}
-
-void MainWindow::restartGame() {
-    resetGame();
-    QList<QGraphicsItem *> items = scene->items();
-    for (QGraphicsItem *item : items) {
-        Fantasma *ghost = dynamic_cast<Fantasma *>(item);
-        if (ghost) {
-            scene->removeItem(ghost);
-            delete ghost;
-        }
-    }
-    QPixmap ghostImage1(":/ghost1.png");
-    QPixmap ghostImage2(":/ghost2.png");
-    Fantasma *blinky = new Fantasma(cellSize, laberinto, scene, ghostImage1, GhostType::Blinky);
-    Fantasma *clyde = new Fantasma(cellSize, laberinto, scene, ghostImage2, GhostType::Clyde);
-    blinky->setPos(5 * cellSize, 10 * cellSize);
-    clyde->setPos(10 * cellSize, 5 * cellSize);
-    scene->addItem(blinky);
-    scene->addItem(clyde);
-    connect(blinky, &Fantasma::pacmanCaught, this, &MainWindow::handlePacmanCaught);
-    connect(clyde, &Fantasma::pacmanCaught, this, &MainWindow::handlePacmanCaught);
-}*/
-
-/*void MainWindow::on_pushButton_clicked() {
-    if (gameOver) {
-        restartGame();
-    }
-}*/
 
 void MainWindow::on_pushButton_clicked()
 {
@@ -339,13 +412,12 @@ void MainWindow::on_pushButton_clicked()
     pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
 
     // Redibujar el laberinto
-    //drawLaberinto();
+    drawLaberinto();
 
     // Iniciar los temporizadores de los fantasmas
-   // timerFantasma1->start();
-    //timerFantasma2->start();
+    // timerFantasma1->start();
+    // timerFantasma2->start();
 
     // Deshabilitar el botón de inicio para evitar movimientos antes de comenzar el juego
     ui->pushButton->setEnabled(false);
 }
-

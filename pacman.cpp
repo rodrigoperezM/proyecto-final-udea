@@ -1,4 +1,4 @@
-/*#include "pacman.h"
+#include "pacman.h"
 #include <QKeyEvent>
 //#include <qDebug>
 
@@ -24,6 +24,6 @@ bool Pacman::checkCollision(const QPointF &newPos) const
 void Pacman::keyPressEvent(QKeyEvent *event)
 {
 
-}*/
+}
 
 
