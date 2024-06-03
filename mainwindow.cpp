@@ -127,6 +127,7 @@ void MainWindow::drawLaberinto() {
     }
 }
 
+
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     // Verificar si el juego está en marcha
@@ -151,90 +152,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         QMainWindow::keyPressEvent(event);
     }
 }
-
-/*void MainWindow::movePacman(int dx, int dy) {
-    int newPacmanX = pacmanX + dx;
-    int newPacmanY = pacmanY + dy;
-    if (newPacmanX >= 0 && newPacmanX < static_cast<int>(laberinto[0].size()) && newPacmanY >= 0 && newPacmanY < static_cast<int
-
->(laberinto.size()) && laberinto[newPacmanY][newPacmanX] != '#') {
-        pacmanX = newPacmanX;
-        pacmanY = newPacmanY;
-
-        // Cambiar la imagen de Pac-Man dependiendo de la dirección
-        if (dx > 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageRight : pacmanImageClosed);
-        } else if (dx < 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageLeft : pacmanImageClosed);
-        } else if (dy > 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageDown : pacmanImageClosed);
-        } else if (dy < 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageUp : pacmanImageClosed);
-        }
-
-        // Alternar el estado de la boca de Pac-Man
-        pacmanMouthOpen = !pacmanMouthOpen;
-
-        // Actualizar la posición de Pac-Man en la escena
-        pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
-
-        // Verificar la recolección de puntos y colisiones
-        collectPoint(newPacmanX, newPacmanY);
-        checkCollision();
-
-        // Actualizar la posición y puntuación de los fantasmas
-        QList<QGraphicsItem *> items = scene->items();
-        foreach (QGraphicsItem *item, items) {
-            Fantasma *ghost = dynamic_cast<Fantasma *>(item);
-            if (ghost) {
-                ghost->setPacmanPosition(pacmanX * cellSize, pacmanY * cellSize);
-                ghost->setScore(score);
-            }
-        }
-    }
-}*/
-
-/*void MainWindow::movePacman(int dx, int dy) {
-    int newPacmanX = pacmanX + dx;
-    int newPacmanY = pacmanY + dy;
-    if (newPacmanX >= 0 && newPacmanX < static_cast<int>(laberinto[0].size()) && newPacmanY >= 0 && newPacmanY < static_cast<int>(laberinto.size()) && laberinto[newPacmanY][newPacmanX] != '#') {
-        pacmanX = newPacmanX;
-        pacmanY = newPacmanY;
-
-        // Cambiar la imagen de Pac-Man dependiendo de la dirección
-        if (dx > 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageRight : pacmanImageClosed);
-        } else if (dx < 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageLeft : pacmanImageClosed);
-        } else if (dy > 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageDown : pacmanImageClosed);
-        } else if (dy < 0) {
-            pacmanItem->setPixmap(pacmanMouthOpen ? pacmanImageUp : pacmanImageClosed);
-        }
-
-        // Alternar el estado de la boca de Pac-Man
-        pacmanMouthOpen = !pacmanMouthOpen;
-
-        // Reproducir el sonido de masticar si se recolecta un punto
-        collectPoint(newPacmanX, newPacmanY);
-
-        // Actualizar la posición de Pac-Man en la escena
-        pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
-
-        // Verificar colisiones con los fantasmas
-        checkCollision();
-
-        // Actualizar la posición y puntuación de los fantasmas
-        QList<QGraphicsItem *> items = scene->items();
-        foreach (QGraphicsItem *item, items) {
-            Fantasma *ghost = dynamic_cast<Fantasma *>(item);
-            if (ghost) {
-                ghost->setPacmanPosition(pacmanX * cellSize, pacmanY * cellSize);
-                ghost->setScore(score);
-            }
-        }
-    }
-}*/
 
 void MainWindow::movePacman(int dx, int dy) {
     int newPacmanX = pacmanX + dx;
@@ -263,7 +180,8 @@ void MainWindow::movePacman(int dx, int dy) {
         // Actualizar la posición de Pac-Man en la escena
         pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
 
-        // Verificar colisiones con los fantasmas
+        // Verificar la recolección de puntos y colisiones
+        collectPoint(pacmanX, pacmanY);
         checkCollision();
 
         // Actualizar la posición y puntuación de los fantasmas
@@ -277,6 +195,8 @@ void MainWindow::movePacman(int dx, int dy) {
         }
     }
 }
+
+
 
 
 
@@ -297,6 +217,7 @@ void MainWindow::collectPoint(int x, int y) {
         handlePowerPoint(x, y);
     }
 }
+
 
 void MainWindow::handlePowerPoint(int x, int y) {
     activatePowerMode();
