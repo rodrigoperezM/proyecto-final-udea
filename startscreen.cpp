@@ -15,7 +15,7 @@ StartScreen::StartScreen(QWidget *parent) : QWidget(parent)
 
     connect(startButton, &QPushButton::clicked, this, &StartScreen::onStartButtonClicked);
     // Establecer un tamaño fijo más pequeño para la pantalla de inicio
-    setFixedSize(1000, 500); // Cambiar el tamaño según sea necesario
+    setFixedSize(1100, 600); // Cambiar el tamaño según sea necesario
 }
 
 void StartScreen::onStartButtonClicked()
