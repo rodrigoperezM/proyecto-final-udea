@@ -17,8 +17,8 @@
    <widget class="QGraphicsView" name="graphicsView">
     <property name="geometry">
      <rect>
-      <x>-130</x>
-      <y>50</y>
+      <x>-40</x>
+      <y>-10</y>
       <width>1200</width>
       <height>800</height>
      </rect>
@@ -27,7 +27,7 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>780</x>
+      <x>900</x>
       <y>640</y>
       <width>75</width>
       <height>23</height>
