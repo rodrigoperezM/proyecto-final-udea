@@ -72,7 +72,7 @@ void MainWindow::startGame()
     // Inicializa y agrega las etiquetas a la escena de gráficos
     scoreLabel = new QLabel("Score: 0");
     scoreLabel->setStyleSheet("QLabel { color : blue; font-size: 16px; }");
-    scene->addWidget(scoreLabel)->setPos(800, -10); // Posición dentro de la escena
+    scene->addWidget(scoreLabel)->setPos(800, 10); // Posición dentro de la escena
 
     livesLabel = new QLabel("Lives: 3");
     livesLabel->setStyleSheet("QLabel { color : blue; font-size: 16px; }");
@@ -226,7 +226,24 @@ void MainWindow::movePacman(int dx, int dy) {
     }
 }
 
-void MainWindow::collectPoint(int x, int y) {
+/*void MainWindow::collectPoint(int x, int y) {
+    if (laberinto[y][x] == '.') {
+        laberinto[y][x] = ' ';
+        score += 10;  // Incrementar el puntaje por puntos recogidos
+        updateScore();
+        totalPoints--;
+        QList<QGraphicsItem *> items = scene->items(QRectF(x * cellSize, y * cellSize, cellSize, cellSize));
+        for (QGraphicsItem *item : items) {
+            if (item->data(0) == "Punto") {
+                scene->removeItem(item);
+                delete item;
+            }
+        }
+        checkGameOver();
+    } else if (laberinto[y][x] == '*') {
+        handlePowerPoint(x, y);
+    }
+}*/void MainWindow::collectPoint(int x, int y) {
     if (laberinto[y][x] == '.') {
         laberinto[y][x] = ' ';
         score += 10;  // Incrementar el puntaje por puntos recogidos
@@ -245,11 +262,28 @@ void MainWindow::collectPoint(int x, int y) {
     }
 }
 
-void MainWindow::handlePowerPoint(int x, int y) {
+
+/*void MainWindow::handlePowerPoint(int x, int y) {
     activatePowerMode();
     laberinto[y][x] = ' ';
     score += 50;  // Sumar 50 puntos por comer un punto de poder
     updateScore();
+     showTemporaryScore(50, x, y);  // Mostrar la puntuación
+
+    // Eliminar el punto de poder de la escena
+    QList<QGraphicsItem *> items = scene->items(QRectF(x * cellSize, y * cellSize, cellSize, cellSize));
+    for (QGraphicsItem *item : items) {
+        if (item->data(0) == "Puntos de poder") {
+            scene->removeItem(item);
+            delete item;
+        }
+    }
+}*/void MainWindow::handlePowerPoint(int x, int y) {
+    activatePowerMode();
+    laberinto[y][x] = ' ';
+    score += 50;  // Sumar 50 puntos por comer un punto de poder
+    updateScore();
+    showTemporaryScore(50, x * cellSize, y * cellSize);  // Mostrar la puntuación en el punto de poder
 
     // Eliminar el punto de poder de la escena
     QList<QGraphicsItem *> items = scene->items(QRectF(x * cellSize, y * cellSize, cellSize, cellSize));
@@ -260,6 +294,7 @@ void MainWindow::handlePowerPoint(int x, int y) {
         }
     }
 }
+
 
 void MainWindow::showGameOverScreen() {
     QGraphicsTextItem *gameOverText = new QGraphicsTextItem();
@@ -296,7 +331,7 @@ void MainWindow::deactivatePowerMode() {
     }
 }
 
-void MainWindow::checkCollision() {
+/*void MainWindow::checkCollision() {
     QList<QGraphicsItem *> items = scene->items(QRectF(pacmanX * cellSize, pacmanY * cellSize, cellSize, cellSize));
     for (QGraphicsItem *item : items) {
         Fantasma *ghost = dynamic_cast<Fantasma *>(item);
@@ -308,16 +343,41 @@ void MainWindow::checkCollision() {
                 enemiesRemaining--;
                 updateEnemiesRemaining();
                 // Sumar puntos por comer un fantasma
-                score += 100;  // Ajustar según el puntaje que desees asignar por comer un fantasma
+                int points = 100;  // Ajustar según el puntaje que desees asignar por comer un fantasma
+                score += points;
                 updateScore();
+                showTemporaryScore(points, pacmanX * cellSize, pacmanY * cellSize);  // Mostrar la puntuación
             } else {
                 handlePacmanCaught();
             }
             return;  // Salir del bucle al encontrar un fantasma
         }
     }
-
+}*/void MainWindow::checkCollision() {
+    QList<QGraphicsItem *> items = scene->items(QRectF(pacmanX * cellSize, pacmanY * cellSize, cellSize, cellSize));
+    for (QGraphicsItem *item : items) {
+        Fantasma *ghost = dynamic_cast<Fantasma *>(item);
+        if (ghost) {
+            if (powerMode) {
+                // Pac-Man come al fantasma
+                scene->removeItem(ghost);
+                delete ghost;
+                enemiesRemaining--;
+                updateEnemiesRemaining();
+                // Sumar puntos por comer un fantasma
+                int points = 100;  // Ajustar según el puntaje que desees asignar por comer un fantasma
+                score += points;
+                updateScore();
+                showTemporaryScore(points, pacmanX * cellSize, pacmanY * cellSize);  // Mostrar la puntuación en la posición del fantasma
+            } else {
+                handlePacmanCaught();
+            }
+            return;  // Salir del bucle al encontrar un fantasma
+        }
+    }
 }
+
+
 
 void MainWindow::handlePacmanCaught() {
     if (gameOver) return; // Asegura de no ejecutar más lógica si el juego ya terminó
@@ -401,3 +461,16 @@ void MainWindow::on_pushButton_clicked() {
     // Deshabilitar el botón de inicio para evitar movimientos antes de comenzar el juego
     ui->pushButton->setEnabled(false);
 }
+void MainWindow::showTemporaryScore(int points, int x, int y) {
+    QLabel *scoreLabel = new QLabel(QString::number(points));
+    scoreLabel->setStyleSheet("QLabel { color : red; font-size: 20px; }");
+    QGraphicsProxyWidget *proxy = scene->addWidget(scoreLabel);
+    proxy->setPos(x, y);
+
+    QTimer::singleShot(1000, [this, proxy]() {
+        scene->removeItem(proxy);
+        delete proxy;
+    });
+}
+
+
