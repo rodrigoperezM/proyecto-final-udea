@@ -17,8 +17,8 @@
    <widget class="QGraphicsView" name="graphicsView">
     <property name="geometry">
      <rect>
-      <x>-150</x>
-      <y>-40</y>
+      <x>-130</x>
+      <y>50</y>
       <width>1200</width>
       <height>800</height>
      </rect>
@@ -27,37 +27,14 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>870</x>
-      <y>530</y>
+      <x>780</x>
+      <y>640</y>
       <width>75</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
      <string>INICIO</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="scoreLabel">
-    <property name="geometry">
-     <rect>
-      <x>880</x>
-      <y>640</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLCDNumber" name="puntaje">
-    <property name="geometry">
-     <rect>
-      <x>880</x>
-      <y>560</y>
-      <width>64</width>
-      <height>23</height>
-     </rect>
     </property>
    </widget>
   </widget>

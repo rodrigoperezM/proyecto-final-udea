@@ -8,6 +8,7 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsEllipseItem>
 #include <QMediaPlayer>
+#include <QGraphicsProxyWidget>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -22,12 +23,32 @@ MainWindow::MainWindow(QWidget *parent) :
     enemiesRemaining(2),
     gameOver(false),
     powerMode(false),
-    pacmanMouthOpen(true) // Indicar que inicialmente la boca de Pac-Man está abierta
+    pacmanMouthOpen(true)
 {
     ui->setupUi(this);
 
+    // Crear la escena del juego
     scene = new QGraphicsScene(this);
     ui->graphicsView->setScene(scene);
+
+    // Crear la instancia de StartScreen
+    startScreen = new StartScreen(this);
+
+    // Conectar la señal startGame de StartScreen al slot startGame de MainWindow
+    connect(startScreen, &StartScreen::startGame, this, &MainWindow::startGame);
+
+    // Mostrar la pantalla de inicio
+    startScreen->show();
+}
+
+void MainWindow::startGame()
+{
+
+    // Ocultar la pantalla de inicio
+    startScreen->hide();
+
+    // Mostrar la vista del juego
+    ui->graphicsView->show();
 
     laberinto = {
         "##################",
@@ -48,12 +69,18 @@ MainWindow::MainWindow(QWidget *parent) :
 
     drawLaberinto();
 
-    scoreLabel = new QLabel("Score: 0", this);
-    scoreLabel->setGeometry(900, 10, 100, 30); // (x, y, ancho, alto)
-    livesLabel = new QLabel("Lives: 3", this);
-    livesLabel->setGeometry(900, 50, 100, 30); // Ajustado para estar debajo de scoreLabel
-    enemiesLabel = new QLabel("Enemies: 2", this);
-    enemiesLabel->setGeometry(900, 90, 100, 30); // Ajustado para estar debajo de livesLabel
+    // Inicializa y agrega las etiquetas a la escena de gráficos
+    scoreLabel = new QLabel("Score: 0");
+    scoreLabel->setStyleSheet("QLabel { color : blue; font-size: 16px; }");
+    scene->addWidget(scoreLabel)->setPos(800, -10); // Posición dentro de la escena
+
+    livesLabel = new QLabel("Lives: 3");
+    livesLabel->setStyleSheet("QLabel { color : blue; font-size: 16px; }");
+    scene->addWidget(livesLabel)->setPos(800, 40); // Posición dentro de la escena
+
+    enemiesLabel = new QLabel("Enemies: 2");
+    enemiesLabel->setStyleSheet("QLabel { color : blue; font-size: 16px; }");
+    scene->addWidget(enemiesLabel)->setPos(800, 70); // Posición dentro de la escena
 
     // Cargar las imágenes de Pac-Man con la boca abierta y cerrada
     pacmanImageOpen.load(":/pacman2.png");
@@ -105,6 +132,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::drawLaberinto() {
     totalPoints = 0;
+
     const int numRows = laberinto.size();
     const int numCols = laberinto[0].size();
     for (int row = 0; row < numRows; ++row) {
@@ -112,7 +140,7 @@ void MainWindow::drawLaberinto() {
             if (laberinto[row][col] == '#') {
                 scene->addRect(col * cellSize, row * cellSize, cellSize, cellSize, QPen(Qt::black), QBrush(Qt::blue));
             } else if (laberinto[row][col] == '.') {
-                totalPoints++;
+                totalPoints++;  // Contabiliza el punto en totalPoints
                 int x = col * cellSize + cellSize / 2 - 2;
                 int y = row * cellSize + cellSize / 2 - 2;
                 QGraphicsEllipseItem *point = scene->addEllipse(x, y, 4, 4, QPen(Qt::black), QBrush(Qt::black));
@@ -156,7 +184,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 void MainWindow::movePacman(int dx, int dy) {
     int newPacmanX = pacmanX + dx;
     int newPacmanY = pacmanY + dy;
-    if (newPacmanX >= 0 && newPacmanX < static_cast<int>(laberinto[0].size()) && newPacmanY >= 0 && newPacmanY < static_cast<int>(laberinto.size()) && laberinto[newPacmanY][newPacmanX] != '#') {
+    if (newPacmanX >= 0 && newPacmanX < static_cast<int>(laberinto[0].size())
+        && newPacmanY >= 0 && newPacmanY < static_cast<int>(laberinto.size())
+        && laberinto[newPacmanY][newPacmanX] != '#') {
         pacmanX = newPacmanX;
         pacmanY = newPacmanY;
 
@@ -196,13 +226,10 @@ void MainWindow::movePacman(int dx, int dy) {
     }
 }
 
-
-
-
-
 void MainWindow::collectPoint(int x, int y) {
     if (laberinto[y][x] == '.') {
         laberinto[y][x] = ' ';
+        score += 10;  // Incrementar el puntaje por puntos recogidos
         updateScore();
         totalPoints--;
         QList<QGraphicsItem *> items = scene->items(QRectF(x * cellSize, y * cellSize, cellSize, cellSize));
@@ -218,11 +245,13 @@ void MainWindow::collectPoint(int x, int y) {
     }
 }
 
-
 void MainWindow::handlePowerPoint(int x, int y) {
     activatePowerMode();
     laberinto[y][x] = ' ';
-    score += 50;
+    score += 50;  // Sumar 50 puntos por comer un punto de poder
+    updateScore();
+
+    // Eliminar el punto de poder de la escena
     QList<QGraphicsItem *> items = scene->items(QRectF(x * cellSize, y * cellSize, cellSize, cellSize));
     for (QGraphicsItem *item : items) {
         if (item->data(0) == "Puntos de poder") {
@@ -230,8 +259,20 @@ void MainWindow::handlePowerPoint(int x, int y) {
             delete item;
         }
     }
-    updateScore();
 }
+
+void MainWindow::showGameOverScreen() {
+    QGraphicsTextItem *gameOverText = new QGraphicsTextItem();
+    QFont titleFont("comic sans", 50);
+    gameOverText->setFont(titleFont);
+    gameOverText->setPlainText("GAME OVER");
+    int xPos = width() / 2 - 300;
+    int yPos = height() / 2 - 200;
+    gameOverText->setPos(xPos, yPos);
+    scene->addItem(gameOverText);
+
+}
+
 
 void MainWindow::activatePowerMode() {
     powerMode = true;
@@ -261,53 +302,37 @@ void MainWindow::checkCollision() {
         Fantasma *ghost = dynamic_cast<Fantasma *>(item);
         if (ghost) {
             if (powerMode) {
+                // Pac-Man come al fantasma
                 scene->removeItem(ghost);
                 delete ghost;
                 enemiesRemaining--;
                 updateEnemiesRemaining();
+                // Sumar puntos por comer un fantasma
+                score += 100;  // Ajustar según el puntaje que desees asignar por comer un fantasma
+                updateScore();
             } else {
                 handlePacmanCaught();
             }
+            return;  // Salir del bucle al encontrar un fantasma
         }
     }
+
 }
 
 void MainWindow::handlePacmanCaught() {
     if (gameOver) return; // Asegura de no ejecutar más lógica si el juego ya terminó
 
     lives--;
-    if (lives < 0) lives = 0; // Asegura de que las vidas no sean negativas
     updateLives();
     if (lives <= 0) {
         gameOver = true;
-        QMessageBox::information(this, "Game Over", "Pacman ha perdido todas las vidas!");
+        //QMessageBox::information(this, "Juego Terminado", "Pacman ha perdido todas las vidas!");
+        showGameOverScreen();
     } else {
         resetPacmanPosition();
     }
 }
 
-void MainWindow::updateScore() {
-    scoreLabel->setText("Score: " + QString::number(score));
-}
-
-void MainWindow::updateLives() {
-    livesLabel->setText("Vidas: " + QString::number(lives));
-}
-
-void MainWindow::updateEnemiesRemaining() {
-    enemiesLabel->setText("Enemigos: " + QString::number(enemiesRemaining));
-    checkGameOver();
-}
-
-void MainWindow::checkGameOver() {
-    if (totalPoints == 0) {
-        gameOver = true;
-        QMessageBox::information(this, "Has ganado!", "Pacman se ha comido todos los puntos!");
-    } else if (enemiesRemaining == 0) {
-        gameOver = true;
-        QMessageBox::information(this, "Has ganado!", "Pacman se ha comido todos los fantasmas!");
-    }
-}
 
 void MainWindow::resetPacmanPosition() {
     pacmanX = 1;
@@ -315,8 +340,46 @@ void MainWindow::resetPacmanPosition() {
     pacmanItem->setPos(pacmanX * cellSize, pacmanY * cellSize);
 }
 
-void MainWindow::on_pushButton_clicked()
-{
+void MainWindow::updateScore() {
+    scoreLabel->setText(QString("Score: %1").arg(score));
+}
+
+
+void MainWindow::updateLives() {
+    livesLabel->setText(QString("Lives: %1").arg(lives));
+}
+
+void MainWindow::updateEnemiesRemaining() {
+    enemiesLabel->setText(QString("Enemies: %1").arg(enemiesRemaining));
+}
+
+void MainWindow::checkGameOver() {
+    if (totalPoints == 0) {
+        gameOver = true;
+        QMessageBox::information(this, "Has ganado!", "Pacman se ha comido todos los puntos!");
+        showGameOverScreen();
+    } else if (enemiesRemaining == 0) {
+        gameOver = true;
+        QMessageBox::information(this, "Has ganado!", "Pacman se ha comido todos los fantasmas!");
+        showGameOverScreen();
+    }
+}
+
+
+void MainWindow::showCongratulationsScreen() {
+    QGraphicsTextItem *congratulationsText = new QGraphicsTextItem();
+    QFont titleFont("comic sans", 50);
+    congratulationsText->setFont(titleFont);
+    congratulationsText->setPlainText("FELICIDADES!\nHAS GANADO!");
+    int xPos = width() / 2 - 300;
+    int yPos = height() / 2 - 200;
+    congratulationsText->setPos(xPos, yPos);
+    scene->addItem(congratulationsText);
+}
+
+
+
+void MainWindow::on_pushButton_clicked() {
     // Configurar las variables iniciales del juego
     score = 0;
     lives = 3;
@@ -334,10 +397,6 @@ void MainWindow::on_pushButton_clicked()
 
     // Redibujar el laberinto
     drawLaberinto();
-
-    // Iniciar los temporizadores de los fantasmas
-    // timerFantasma1->start();
-    // timerFantasma2->start();
 
     // Deshabilitar el botón de inicio para evitar movimientos antes de comenzar el juego
     ui->pushButton->setEnabled(false);

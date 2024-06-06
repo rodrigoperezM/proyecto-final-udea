@@ -17,9 +17,11 @@ SOURCES += \
     fantasma.cpp \
     main.cpp \
     mainwindow.cpp \
-    pacman.cpp
+    pacman.cpp \
+    startscreen.cpp
 
 HEADERS += \
+    StartScreen.h \
     direction.h \
     fantasma.h \
     mainwindow.h \

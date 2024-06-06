@@ -4,7 +4,7 @@
 
 #include <QObject>
 #include <QGraphicsPixmapItem>
-#include <QKeyEvent> // Necesitamos incluir QKeyEvent para poder usarlo
+//#include <QKeyEvent> // Se incluye QKeyEvent para poder usarlo
 
 enum class Direction { Up, Down, Left, Right }; // Definición de Direction
 
@@ -23,8 +23,8 @@ private:
     int cellSize;
     Direction currentDirection;
     QPointF pacmanPos;
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
+/*protected:
+    void keyPressEvent(QKeyEvent *event) override;*/
 
 };
 

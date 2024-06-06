@@ -5,7 +5,7 @@ Fantasma::Fantasma(int cellSize, const std::vector<QString> &laberinto, QGraphic
     : QGraphicsPixmapItem(pixmap), cellSize(cellSize), laberinto(laberinto), pacmanX(0), pacmanY(0), score(0), type(type), powerMode(false) {
     moveTimer = new QTimer(this);
     connect(moveTimer, &QTimer::timeout, this, &Fantasma::move);
-    moveTimer->start(300);
+    moveTimer->start(500);
 }
 
 void Fantasma::setPacmanPosition(int x, int y) {
@@ -27,15 +27,15 @@ void Fantasma::move() {
 
     if (powerMode) {
         // Mueve fantasma en dirección opuesta a Pacman
-        if (ghostX < pacmanX / cellSize) {
+        if (ghostX <= pacmanX / cellSize) {
             ghostX--;
-        } else if (ghostX > pacmanX / cellSize) {
+        } else if (ghostX >= pacmanX / cellSize) {
             ghostX++;
         }
 
-        if (ghostY < pacmanY / cellSize) {
+        if (ghostY <= pacmanY / cellSize) {
             ghostY--;
-        } else if (ghostY > pacmanY / cellSize) {
+        } else if (ghostY >= pacmanY / cellSize) {
             ghostY++;
         }
     } else {
@@ -62,7 +62,8 @@ void Fantasma::move() {
     }
 }
 
-void Fantasma::changeDirection() {
+/*void Fantasma::changeDirection() {
     // Cambia dirección aleatoriamente
-}
+}*/
+
 
